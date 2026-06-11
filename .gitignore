@@ -1,4 +1,5 @@
 .conda-env/
+.worktrees/
 .cache/
 .pytest_cache/
 __pycache__/
@@ -10,4 +11,3 @@ report/*.blg
 report/*.log
 report/*.out
 report/*.synctex.gz
-
