@@ -1,0 +1,15 @@
+tvls: [100000, 1000000, 10000000]
+trade_fractions: [0.001, 0.005, 0.01, 0.02, 0.05, 0.10, 0.20]
+terminal_price_changes: [-0.50, -0.20, -0.05, 0.05, 0.20, 0.50]
+stable_price_changes: [-0.05, 0.05]
+daily_volume_fractions: [0.10, 0.50, 1.00]
+analysis_tvl: 1000000
+days: 30
+v3_ranges:
+  narrow: [0.95, 1.05]
+  medium: [0.80, 1.20]
+  wide: [0.50, 2.00]
+stableswap_amplifications: [10, 100, 1000]
+weighted_pool_weights:
+  "50_50": [0.50, 0.50]
+  "80_20": [0.80, 0.20]
