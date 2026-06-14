@@ -7,14 +7,22 @@ from matplotlib.ticker import PercentFormatter
 def _setup() -> None:
     plt.rcParams.update(
         {
-            "figure.figsize": (7.0, 4.2),
-            "font.size": 9,
+            "font.size": 10,
+            "axes.labelsize": 10,
+            "xtick.labelsize": 9,
+            "ytick.labelsize": 9,
             "axes.grid": True,
             "grid.alpha": 0.25,
-            "legend.fontsize": 7,
+            "legend.fontsize": 8,
             "savefig.bbox": "tight",
         }
     )
+
+
+def _new_figure(profile: str):
+    _setup()
+    sizes = {"single": (4.4, 3.1), "double": (7.4, 3.8)}
+    return plt.figure(figsize=sizes[profile])
 
 
 def _label(row) -> str:
@@ -29,12 +37,12 @@ def _save(path: Path) -> None:
 
 def generate_figures(frames: dict, output_dir: Path) -> None:
     output_dir.mkdir(parents=True, exist_ok=True)
-    _setup()
 
     slippage = frames["slippage"].copy()
     slippage["label"] = slippage.apply(_label, axis=1)
 
     selected = slippage[slippage["tvl"] == 1_000_000]
+    _new_figure("double")
     for label, group in selected.groupby("label", sort=False):
         plt.plot(group["trade_fraction"], group["slippage"], marker="o", label=label)
     plt.xlabel("Trade input / TVL")
@@ -45,6 +53,7 @@ def generate_figures(frames: dict, output_dir: Path) -> None:
     _save(output_dir / "slippage_comparison.pdf")
 
     v2 = slippage[slippage["model"] == "Uniswap V2"]
+    _new_figure("single")
     for tvl, group in v2.groupby("tvl"):
         plt.plot(group["gross_input"], group["slippage"], marker="o", label=f"TVL ${tvl:,.0f}")
     plt.xlabel("Absolute trade input (USD-equivalent)")
@@ -55,6 +64,7 @@ def generate_figures(frames: dict, output_dir: Path) -> None:
     _save(output_dir / "liquidity_effect.pdf")
 
     stable = selected[selected["model"] == "Curve StableSwap"]
+    _new_figure("single")
     for label, group in stable.groupby("label", sort=False):
         plt.plot(group["trade_fraction"], group["slippage"], marker="o", label=label)
     plt.xlabel("Trade input / TVL")
@@ -66,6 +76,7 @@ def generate_figures(frames: dict, output_dir: Path) -> None:
 
     il_frame = frames["impermanent_loss"].copy()
     il_frame["label"] = il_frame.apply(_label, axis=1)
+    _new_figure("double")
     for label, group in il_frame.groupby("label", sort=False):
         plt.plot(group["price_change"], group["impermanent_loss"], marker="o", label=label)
     plt.xlabel("Terminal price change")
@@ -78,6 +89,7 @@ def generate_figures(frames: dict, output_dir: Path) -> None:
     returns = frames["lp_return"]
     returns = returns[returns["daily_volume_fraction"] == 0.5].copy()
     returns["label"] = returns.apply(_label, axis=1)
+    _new_figure("double")
     for label, group in returns.groupby("label", sort=False):
         plt.plot(
             group["price_change"],
@@ -95,6 +107,7 @@ def generate_figures(frames: dict, output_dir: Path) -> None:
 
     monte_carlo = frames["monte_carlo_summary"].copy()
     monte_carlo["label"] = monte_carlo.apply(_label, axis=1)
+    _new_figure("double")
     for label, group in monte_carlo.groupby("label", sort=False):
         group = group.sort_values("annual_volatility")
         plt.plot(
@@ -119,6 +132,7 @@ def generate_figures(frames: dict, output_dir: Path) -> None:
     _save(output_dir / "monte_carlo_returns.pdf")
 
     v3 = monte_carlo[monte_carlo["model"] == "Uniswap V3"]
+    _new_figure("single")
     for label, group in v3.groupby("label", sort=False):
         group = group.sort_values("annual_volatility")
         plt.plot(

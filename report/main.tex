@@ -218,12 +218,12 @@ Weighted & 50/50, 80/20 & Baseline versus asymmetric exposure\\
 
 \section{Slippage Results}
 
-\begin{figure}[!b]
+\begin{figure*}[!tbp]
 \centering
-\includegraphics[width=\columnwidth]{slippage_comparison.pdf}
+\includegraphics[width=\textwidth]{slippage_comparison.pdf}
 \caption{Slippage versus normalized trade size at \$1 million TVL.}
 \label{fig:slippage}
-\end{figure}
+\end{figure*}
 
 Figure~\ref{fig:slippage} shows that invariant choice strongly changes
 execution. At a \pct{10}-of-TVL trade, V2 and Balancer 50/50 both produce
@@ -270,12 +270,12 @@ size.
 
 \section{Impermanent-Loss Results}
 
-\begin{figure}[!tbp]
+\begin{figure*}[!tbp]
 \centering
-\includegraphics[width=\columnwidth]{impermanent_loss.pdf}
+\includegraphics[width=\textwidth]{impermanent_loss.pdf}
 \caption{Impermanent loss relative to each configuration's initial holdings.}
 \label{fig:il}
-\end{figure}
+\end{figure*}
 
 Figure~\ref{fig:il} exposes the opposite side of capital efficiency. At a
 $+\pct{50}$ terminal move, V2 and Balancer 50/50 lose \pct{2.020} relative to
@@ -302,13 +302,13 @@ correlation is credible.
 
 \section{LP-Return Results}
 
-\begin{figure}[!tbp]
+\begin{figure*}[!tbp]
 \centering
-\includegraphics[width=\columnwidth]{lp_return.pdf}
+\includegraphics[width=\textwidth]{lp_return.pdf}
 \caption{Deterministic 30-day LP excess return versus HODL at daily volume
 equal to \pct{50} of TVL.}
 \label{fig:return}
-\end{figure}
+\end{figure*}
 
 At \pct{50} daily volume, a \pct{0.30} fee produces fee value equal to
 \pct{4.5} of initial capital before V3 availability adjustment. V2 excess
@@ -402,13 +402,13 @@ daily volume equal to \pct{50} of TVL. A V3 position earns fees only for the
 fraction of observed daily prices inside its fixed range. A fixed position can
 earn fees again if price re-enters; no active rebalancing occurs.
 
-\begin{figure}[!tbp]
+\begin{figure*}[!tbp]
 \centering
-\includegraphics[width=\columnwidth]{monte_carlo_returns.pdf}
+\includegraphics[width=\textwidth]{monte_carlo_returns.pdf}
 \caption{Monte Carlo mean and fifth-percentile 30-day LP excess returns versus
 HODL.}
 \label{fig:mc-return}
-\end{figure}
+\end{figure*}
 
 Figure~\ref{fig:mc-return} separates average outcome from downside risk. At
 $\sigma=\pct{100}$, V2 and weighted 50/50 have a mean excess return of
