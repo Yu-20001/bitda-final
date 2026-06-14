@@ -13,3 +13,5 @@ report/*.out
 report/*.synctex.gz
 
 .local/
+
+BitDA_final (1).pdf
