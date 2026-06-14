@@ -7,10 +7,13 @@
 \usepackage{caption}
 
 \graphicspath{{../results/figures/}}
-\captionsetup{font=small,labelfont=bf}
+\captionsetup{font=small,labelfont=bf,skip=3pt}
 \setlength{\parindent}{1em}
-\setlength{\parskip}{0.15em}
+\setlength{\parskip}{0.1em}
 \setlength{\tabcolsep}{3pt}
+\setlength{\textfloatsep}{8pt plus 2pt minus 2pt}
+\setlength{\floatsep}{7pt plus 2pt minus 2pt}
+\setlength{\intextsep}{7pt plus 2pt minus 2pt}
 \setlist{nosep,leftmargin=*}
 \newcommand{\pct}[1]{#1\%}
 
@@ -555,7 +558,8 @@ Reproduction requires three commands from the repository root: run
 \texttt{pytest}; run \texttt{scripts/run\_experiments.py} with
 \texttt{PYTHONPATH=src}; then compile \texttt{report/main.tex} with Tectonic.
 Generated CSV files remain available for auditing values that are summarized
-or rounded in this report.
+or rounded in this report. Source code and reproduction instructions are
+available at \url{https://github.com/Yu-20001/bitda-final}.
 
 \section{Conclusion}
 
@@ -582,6 +586,8 @@ therefore follows from market assumptions, LP objectives, and acceptable
 failure modes.
 
 \begin{thebibliography}{9}
+\setlength{\itemsep}{0pt}
+\setlength{\parskip}{0pt}
 \bibitem{univ2}
 H. Adams, N. Zinsmeister, and D. Robinson,
 \emph{Uniswap v2 Core}, 2020.
