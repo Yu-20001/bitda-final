@@ -87,8 +87,9 @@ Tectonic LaTeX.
 - Create: `src/amm_sim/metrics.py`
 - Create: `tests/test_metrics.py`
 
-- [ ] Write failing tests for slippage, zero-change IL, known V2 IL, deterministic
-  fee return, V3 availability, and net LP return.
+- [ ] Write failing tests for slippage, zero-change IL, known V2 IL,
+  deterministic fee return, V3 availability, absolute LP return, and excess
+  return versus HODL.
 - [ ] Confirm focused tests fail for missing behavior.
 - [ ] Implement only the shared metric functions required by the tests.
 - [ ] Run focused and complete tests.
@@ -132,19 +133,29 @@ Tectonic LaTeX.
 - [ ] Explain why each recommended configuration was selected.
 - [ ] Compile with `.conda-env/bin/tectonic report/main.tex`.
 - [ ] Inspect warnings, page count, text extraction, and rendered pages.
-- [ ] Revise until the report is readable and 8--10 pages.
+- [x] Revise until the report is readable, compact, and naturally paginated.
 
 ### Task 10: Final Reproduction and Scope Verification
 
 **Files:**
 - Modify: `README.md`
 
-- [ ] Run the complete pytest suite with a fresh writable Matplotlib cache.
-- [ ] Remove generated results, re-run the experiment script, and verify all
+- [x] Run the complete pytest suite with a fresh writable Matplotlib cache.
+- [x] Remove generated results, re-run the experiment script, and verify all
   expected outputs regenerate.
-- [ ] Recompile the report from generated outputs.
-- [ ] Verify every base requirement and report-quality criterion against the
+- [x] Recompile the report from generated outputs.
+- [x] Verify every base requirement and report-quality criterion against the
   design acceptance checklist.
-- [ ] Verify excluded extra-content features are absent.
-- [ ] Stop and present the completed 60+20 deliverables for user review.
+- [x] Verify excluded extra-content features are absent.
+- [x] Stop and present the completed 60+20 deliverables for user review.
 
+## Base-Scope Completion Addendum
+
+The final acceptance run must additionally verify:
+
+- [x] V3 rejects exact-input swaps that exceed the single fixed range's
+  capacity.
+- [x] Slippage CSV output includes `net_input`.
+- [x] README reproduction commands run exactly as documented.
+- [x] The design and report consistently define gross-input slippage as
+  including both price impact and the trading fee.

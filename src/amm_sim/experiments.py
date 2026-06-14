@@ -3,7 +3,13 @@ from pathlib import Path
 import pandas as pd
 import yaml
 
-from .metrics import fee_return, impermanent_loss, lp_net_return
+from .metrics import (
+    absolute_lp_return,
+    excess_return_vs_hold,
+    fee_return,
+    impermanent_loss,
+)
+from .monte_carlo import summarize_monte_carlo
 from .stableswap import StableSwapPool
 from .uniswap_v2 import UniswapV2Pool
 from .uniswap_v3 import UniswapV3Position
@@ -51,6 +57,7 @@ def _generate_slippage(config: dict) -> pd.DataFrame:
                         "trade_fraction": trade_fraction,
                         "gross_input": quote.gross_input,
                         "fee_paid": quote.fee,
+                        "net_input": quote.net_input,
                         "output": quote.output,
                         "execution_price": quote.execution_price,
                         "slippage": quote.slippage,
@@ -89,18 +96,17 @@ def _generate_lp_return(config: dict, il_frame: pd.DataFrame) -> pd.DataFrame:
         "Curve StableSwap": 0.0004,
         "Balancer Weighted": 0.003,
     }
-    v3_ranges = {
-        f"{name} [{bounds[0]:.2f}, {bounds[1]:.2f}]": bounds
-        for name, bounds in config["v3_ranges"].items()
+    positions = {
+        (model, configuration): pool
+        for model, configuration, pool in _model_configurations(
+            config, config["analysis_tvl"]
+        )
     }
     rows = []
     for record in il_frame.to_dict("records"):
+        position = positions[(record["model"], record["configuration"])]
         availability = 1.0
         if record["model"] == "Uniswap V3":
-            bounds = v3_ranges[record["configuration"]]
-            position = UniswapV3Position.from_capital(
-                config["analysis_tvl"], 1.0, bounds[0], bounds[1]
-            )
             availability = position.path_availability(record["terminal_price"])
         for volume_fraction in config["daily_volume_fractions"]:
             fees = fee_return(
@@ -108,14 +114,20 @@ def _generate_lp_return(config: dict, il_frame: pd.DataFrame) -> pd.DataFrame:
                 fee_rates[record["model"]],
                 config["days"],
             )
+            available_fee_return = fees * availability
+            fee_value = config["analysis_tvl"] * available_fee_return
             rows.append(
                 {
                     **record,
                     "daily_volume_fraction": volume_fraction,
                     "availability": availability,
-                    "fee_return": fees * availability,
-                    "net_return": lp_net_return(
-                        record["impermanent_loss"], fees, availability
+                    "fee_return": available_fee_return,
+                    "fee_value": fee_value,
+                    "absolute_lp_return": absolute_lp_return(
+                        position, record["terminal_price"], fee_value
+                    ),
+                    "excess_return_vs_hold": excess_return_vs_hold(
+                        position, record["terminal_price"], fee_value
                     ),
                 }
             )
@@ -128,10 +140,21 @@ def generate_all(config_path: Path, output_dir: Path) -> dict[str, pd.DataFrame]
     slippage = _generate_slippage(config)
     il_frame = _generate_il(config)
     lp_return = _generate_lp_return(config, il_frame)
+    monte_carlo = config["monte_carlo"]
+    monte_carlo_summary = summarize_monte_carlo(
+        annual_volatilities=monte_carlo["annual_volatilities"],
+        days=config["days"],
+        paths=monte_carlo["paths"],
+        seed=monte_carlo["seed"],
+        daily_volume_fraction=monte_carlo["daily_volume_fraction"],
+        v3_ranges=config["v3_ranges"],
+        weighted_pool_weights=config["weighted_pool_weights"],
+    )
     frames = {
         "slippage": slippage,
         "impermanent_loss": il_frame,
         "lp_return": lp_return,
+        "monte_carlo_summary": monte_carlo_summary,
     }
     for name, frame in frames.items():
         frame.to_csv(output_dir / f"{name}.csv", index=False)

@@ -47,7 +47,8 @@ class UniswapV3Position:
         root_p = sqrt(self.initial_price)
         root_a = sqrt(self.lower_price)
         root_next = self.liquidity * root_p / (self.liquidity + net_input * root_p)
-        root_next = max(root_next, root_a)
+        if root_next < root_a:
+            raise ValueError("exact input exceeds fixed-range capacity")
         output = self.liquidity * (root_p - root_next)
         return make_swap_result(
             gross_input,

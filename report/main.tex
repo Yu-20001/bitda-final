@@ -17,7 +17,7 @@
 \title{\vspace{-1.2cm}\textbf{Comparing AMM Mechanisms:}\\
 Slippage, Impermanent Loss, and Deterministic LP Returns}
 \author{BitDA Final Project}
-\date{June 2026}
+\date{R14944042 Chung-Yu, Hsu}
 
 \begin{document}
 \maketitle
@@ -60,10 +60,10 @@ This report answers three questions:
 
 The contribution is a small, tested simulator rather than a qualitative
 comparison alone. Every reported result is generated from a versioned YAML
-scenario file. The study intentionally excludes stochastic price paths, live
-on-chain data, loss-versus-rebalancing, and active V3 strategies. These are
-valuable extensions, but including them would obscure the required mechanism
-comparison.
+scenario file. A Monte Carlo extension measures return distributions and V3
+range risk. The study excludes live on-chain data, loss-versus-rebalancing,
+and active V3 strategies because they require additional market and strategy
+assumptions.
 
 \section{Mathematical Models}
 
@@ -176,20 +176,28 @@ over 30 days. The middle case is used in the main return figure.
 
 \subsection{Deterministic LP Return}
 
-Fee return is approximated as
+Fee return as a fraction of initial capital is approximated as
 \begin{equation}
 r_f=v_d f \times 30,
 \end{equation}
-where $v_d$ is daily volume divided by TVL. Net return is
+where $v_d$ is daily volume divided by TVL. Let $F=a r_f V_0$ be the available
+fee value. We report both absolute LP return
 \begin{equation}
-r_{\mathrm{LP}}=\mathrm{IL}+a r_f.
+r_{\mathrm{abs}}=\frac{V_{\mathrm{pool}}(p_T)+F}{V_0}-1
+\end{equation}
+and excess return versus holding:
+\begin{equation}
+r_{\mathrm{excess}}=\frac{V_{\mathrm{pool}}(p_T)+F}{x_0p_T+y_0}-1.
 \end{equation}
 The availability factor $a$ is one for full-range models. For V3 it is the
 fraction of a linear path from $p_0$ to $p_T$ that remains inside the fixed
 range. This is deliberately transparent, but it is not a claim that real
-volume is uniform over time or price.
+volume is uniform over time or price. Comparative figures use excess return
+because it isolates whether providing liquidity outperformed holding the same
+initial assets. A positive excess return does not imply a positive absolute
+investment return.
 
-\begin{table}[t]
+\begin{table}[!tbp]
 \centering
 \caption{Approved configurations and rationale.}
 \footnotesize
@@ -205,10 +213,9 @@ Weighted & 50/50, 80/20 & Baseline versus asymmetric exposure\\
 \end{tabular}
 \end{table}
 
-\newpage
 \section{Slippage Results}
 
-\begin{figure}[t]
+\begin{figure}[!b]
 \centering
 \includegraphics[width=\columnwidth]{slippage_comparison.pdf}
 \caption{Slippage versus normalized trade size at \$1 million TVL.}
@@ -229,14 +236,15 @@ V3 demonstrates the benefit of concentrating capital. At the same
 \pct{2.179}, and \pct{5.802} slippage. Their advantage is conditional on the
 trade remaining near the active interval. A sufficiently large input reaches
 the lower bound, after which this single-position model supplies no additional
-liquidity.
+liquidity. The simulator rejects such an exact-input quote rather than
+reporting a partial fill as a complete trade.
 
 StableSwap is the most efficient around parity. At \pct{10} input, slippage
 falls from \pct{1.883} at $A=10$ to \pct{0.246} at $A=100$ and \pct{0.061} at
 $A=1000$. Increasing $A$ flattens the near-parity curve, but the later
 impermanent-loss result shows why this efficiency is not free.
 
-\begin{figure}[t]
+\begin{figure}[!tbp]
 \centering
 \includegraphics[width=\columnwidth]{liquidity_effect.pdf}
 \caption{A fixed absolute trade receives lower V2 slippage as TVL increases.}
@@ -250,17 +258,16 @@ moves less because the trade represents a smaller reserve fraction. This
 explains why ``high liquidity'' must be defined relative to intended order
 size.
 
-\begin{figure}[t]
+\begin{figure}[!tbp]
 \centering
 \includegraphics[width=\columnwidth]{stableswap_amplification.pdf}
 \caption{Amplification reduces StableSwap slippage near parity.}
 \label{fig:stable-slip}
 \end{figure}
 
-\clearpage
 \section{Impermanent-Loss Results}
 
-\begin{figure}[t]
+\begin{figure}[!tbp]
 \centering
 \includegraphics[width=\columnwidth]{impermanent_loss.pdf}
 \caption{Impermanent loss relative to each configuration's initial holdings.}
@@ -292,32 +299,33 @@ correlation is credible.
 
 \section{LP-Return Results}
 
-\begin{figure}[t]
+\begin{figure}[!tbp]
 \centering
 \includegraphics[width=\columnwidth]{lp_return.pdf}
-\caption{Deterministic 30-day LP return at daily volume equal to \pct{50} of
-TVL.}
+\caption{Deterministic 30-day LP excess return versus HODL at daily volume
+equal to \pct{50} of TVL.}
 \label{fig:return}
 \end{figure}
 
-At \pct{50} daily volume, a \pct{0.30} fee produces a gross 30-day fee return
-of \pct{4.5} before V3 availability adjustment. This covers V2 IL for all
-positive-price cases in the scenario set: net return is \pct{4.086} at
-$+\pct{20}$ and \pct{2.480} at $+\pct{50}$. It does not cover the
-$-\pct{50}$ stress case, where net return is $-\pct{1.219}$.
+At \pct{50} daily volume, a \pct{0.30} fee produces fee value equal to
+\pct{4.5} of initial capital before V3 availability adjustment. V2 excess
+return versus HODL is \pct{3.677} at $+\pct{20}$, \pct{1.580} at
+$+\pct{50}$, and \pct{0.281} at $-\pct{50}$. In the last case, the LP still
+has a negative \pct{24.789} absolute return because both initially held assets
+lost value, but fees make liquidity provision slightly better than HODL.
 
-Balancer 80/20 has the highest net return among volatile-pair full-range models
+Balancer 80/20 has the highest excess return among volatile-pair full-range models
 in these tested directions because it receives the same assumed fee rate while
-experiencing lower IL. Its net return is \pct{4.244} at $+\pct{20}$ and
-\pct{3.297} at $+\pct{50}$. This conclusion depends directly on equal volume
+experiencing lower IL. Its excess return is \pct{3.623} at $+\pct{20}$ and
+\pct{2.012} at $+\pct{50}$. This conclusion depends directly on equal volume
 and fee assumptions; actual order flow may differ by pool design.
 
 V3 outcomes depend on both IL and time in range. At $+\pct{20}$, the wide
-range earns \pct{3.086}, the medium range approximately breaks even at
-\pct{0.165}, and the narrow range loses \pct{6.664}. The narrow range earns
+range earns \pct{2.677} excess return, while the medium and narrow ranges lose
+\pct{0.209} and \pct{6.764}. The narrow range earns
 fees for only one quarter of the assumed linear path before price crosses its
 upper bound. The result demonstrates that headline capital efficiency is not
-the same as realized LP return.
+the same as realized excess return versus HODL.
 
 StableSwap charges only \pct{0.04} in this model, giving a \pct{0.6} gross
 30-day fee return at \pct{50} daily volume. This covers the $A=10$ small-depeg
@@ -328,7 +336,8 @@ additional risk controls.
 \section{Volume Sensitivity}
 
 The fixed-volume scenarios make the break-even dependence explicit.
-Table~\ref{tab:volume} reports net return at a $+\pct{20}$ terminal move. V2
+Table~\ref{tab:volume} reports excess return versus HODL at a $+\pct{20}$
+terminal move. V2
 and both weighted pools remain positive even at \pct{10} daily volume because
 their IL is small in this scenario. The V3 wide position requires more than
 \pct{10} daily volume to break even, while the medium position requires close
@@ -336,20 +345,20 @@ to the \pct{50} case. The narrow position remains negative even at daily volume
 equal to TVL because it is active for only one quarter of the assumed price
 path and its IL dominates collected fees.
 
-\begin{table}[t]
+\begin{table}[!tbp]
 \centering
-\caption{30-day net return at $+\pct{20}$ price change.}
+\caption{30-day excess return versus HODL at $+\pct{20}$ price change.}
 \label{tab:volume}
 \small
 \begin{tabular}{lrrr}
 \toprule
 Configuration & \pct{10} & \pct{50} & \pct{100}\\
 \midrule
-V2 / Weighted 50/50 & 0.49\% & 4.09\% & 8.59\%\\
-Weighted 80/20 & 0.64\% & 4.24\% & 8.74\%\\
-V3 narrow & -7.56\% & -6.66\% & -5.54\%\\
-V3 medium & -3.44\% & 0.16\% & 4.66\%\\
-V3 wide & -0.51\% & 3.09\% & 7.59\%\\
+V2 / Weighted 50/50 & 0.40\% & 3.68\% & 7.77\%\\
+Weighted 80/20 & 0.52\% & 3.62\% & 7.50\%\\
+V3 narrow & -7.58\% & -6.76\% & -5.74\%\\
+V3 medium & -3.51\% & -0.21\% & 3.92\%\\
+V3 wide & -0.60\% & 2.68\% & 6.77\%\\
 \bottomrule
 \end{tabular}
 \end{table}
@@ -362,10 +371,83 @@ which LPs receive that flow. The controlled assumption is useful because it
 isolates fee-rate and availability effects, but deployment analysis must
 replace it with observed or modeled order flow.
 
-\clearpage
+\section{Monte Carlo Risk Analysis}
+
+The deterministic scenarios isolate specific terminal prices, but LPs face a
+distribution of price paths. As additional analysis, we generate 10,000
+zero-drift geometric Brownian motion (GBM) paths for each annualized volatility
+level $\sigma\in\{\pct{20},\pct{60},\pct{100}\}$. Each path begins at one and
+contains 30 daily steps:
+\begin{equation}
+P_{t+1}=P_t\exp\left(-\tfrac12\sigma_d^2+\sigma_d Z_t\right),
+\end{equation}
+where $\sigma_d=\sigma/\sqrt{365}$ and $Z_t$ is standard normal.
+
+Zero drift avoids embedding a directional market forecast. The three
+volatility levels represent low, moderate, and high volatile-asset markets.
+Thirty daily observations match the base return period, while 10,000 paths
+provide stable distribution summaries at modest computational cost. The fixed
+seed 20260611 makes the output exactly reproducible.
+
+StableSwap is excluded from this extension because unrestricted GBM does not
+represent stable-asset mean reversion or jump-depeg risk. A credible
+StableSwap stochastic analysis requires a separate price process.
+
+For each path, terminal IL uses the same analytical valuation as the
+deterministic analysis. Full-range models earn the assumed \pct{0.30} fee on
+daily volume equal to \pct{50} of TVL. A V3 position earns fees only for the
+fraction of observed daily prices inside its fixed range. A fixed position can
+earn fees again if price re-enters; no active rebalancing occurs.
+
+\begin{figure}[!tbp]
+\centering
+\includegraphics[width=\columnwidth]{monte_carlo_returns.pdf}
+\caption{Monte Carlo mean and fifth-percentile 30-day LP excess returns versus
+HODL.}
+\label{fig:mc-return}
+\end{figure}
+
+Figure~\ref{fig:mc-return} separates average outcome from downside risk. At
+$\sigma=\pct{100}$, V2 and weighted 50/50 have a mean excess return of
+\pct{3.56} and a fifth-percentile excess return of \pct{0.58}. Weighted 80/20
+improves these to \pct{4.04} and \pct{1.69} relative to its weighted hold
+benchmark. This is consistent with its lower IL sensitivity in the tested
+exposure.
+
+V3 outcomes depend strongly on range width. Narrow V3 has a positive
+\pct{2.25} mean excess return at $\sigma=\pct{20}$, but its fifth percentile
+is $-\pct{2.73}$ and its underperformance probability is \pct{18.37}. At
+$\sigma=\pct{100}$, its mean excess return falls to $-\pct{9.26}$ and
+underperformance probability reaches \pct{85.23}. Medium V3 also turns
+negative on average at high volatility. Wide V3 retains a positive
+\pct{1.08} mean excess return at $\sigma=\pct{100}$, but its fifth percentile
+is $-\pct{8.78}$, showing that a positive mean does not eliminate material
+downside.
+
+\begin{figure}[!tbp]
+\centering
+\includegraphics[width=\columnwidth]{v3_range_risk.pdf}
+\caption{Probability that a fixed V3 position leaves its range at least once.}
+\label{fig:v3-risk}
+\end{figure}
+
+Figure~\ref{fig:v3-risk} explains the fee and return differences. Narrow V3
+leaves its range on \pct{65.39} of low-volatility paths and essentially every
+moderate- or high-volatility path. Its mean in-range fraction falls from
+\pct{79.70} to \pct{23.60}. Medium V3 exits on \pct{40.20} of paths at
+$\sigma=\pct{60}$ and \pct{80.62} at $\sigma=\pct{100}$. Wide V3 exits on
+only \pct{2.49} of high-volatility paths.
+
+The stochastic extension reinforces rather than replaces the deterministic
+conclusion: concentrated liquidity improves local execution, but realized LP
+performance depends on the probability and duration of range exit. GBM is
+still a simplification; it excludes jumps, volatility clustering, endogenous
+volume, intraday crossings, and correlations between price movement and order
+flow.
+
 \section{Mechanism Comparison and Market Fit}
 
-\begin{table*}[t]
+\begin{table*}[!tbp]
 \centering
 \caption{Qualitative interpretation of the simulated trade-offs.}
 \small
@@ -403,17 +485,21 @@ slippage can expose LPs to the strongest adverse selection.
 
 \section{Limitations}
 
-The simulator is deliberately deterministic. Its results should be interpreted
-as controlled mechanism comparisons, not forecasts.
+The base scenarios are deliberately deterministic, and the Monte Carlo
+extension uses a deliberately simple price process. Results should be
+interpreted as controlled mechanism comparisons, not forecasts.
 
 \begin{itemize}
   \item Fee income is proportional to an assumed daily volume and does not
   model endogenous volume, fee compounding, or competition among LPs.
   \item Terminal IL is path independent for the full-range analytical models,
   while actual fee earnings and V3 inventory management are path dependent.
+  \item Monte Carlo paths use zero-drift GBM with constant volatility. They
+  exclude jumps, volatility clustering, and price-volume dependence.
   \item V3 uses one fixed position and a linear-path availability factor. It
   excludes ticks shared by other LPs, active repositioning, gas, and
-  rebalancing losses.
+  rebalancing losses. Exact-input quotes beyond the fixed position's capacity
+  are rejected rather than routed through additional positions.
   \item StableSwap uses two equally valued assets and an ideal arbitrage
   equilibrium. It excludes admin fees, imbalance fees, withdrawal behavior,
   and irreversible depeg dynamics.
@@ -434,15 +520,19 @@ The implementation separates invariant modules from shared metrics and
 experiment orchestration. Automated tests cover known outputs, invariant
 preservation, V3 inventory below/inside/above its range, StableSwap
 amplification behavior, zero-change IL, deterministic scenario counts, and
-figure generation. The approved YAML configuration expands to 189 slippage
-rows, 42 IL rows, and 126 LP-return rows.
+figure generation. Monte Carlo tests cover fixed-seed determinism,
+zero-volatility behavior, complete summaries, and ordered V3 range risk. The
+approved YAML configuration expands to 189 slippage rows, 42 IL rows, 126
+LP-return rows, and 18 Monte Carlo summary rows. Return outputs include both
+absolute LP return and excess return versus HODL; comparative figures and
+underperformance probabilities use the latter.
 
-The experiment command regenerates all CSV files and PDF figures. No random
-number generator or external API is used. This makes every table and figure
-repeatable from the repository state and allows individual assumptions to be
-changed without rewriting model code.
+The experiment command regenerates all CSV files and PDF figures. Monte Carlo
+uses NumPy's random number generator with a fixed seed, and no external API is
+used. This makes every table and figure repeatable from the repository state
+and allows individual assumptions to be changed without rewriting model code.
 
-\begin{table}[t]
+\begin{table}[!tbp]
 \centering
 \caption{Selected validation claims and automated checks.}
 \small
@@ -456,6 +546,7 @@ V3 becomes one-sided outside range & Below, inside, and above inventory tests\\
 Higher $A$ reduces near-parity slippage & Ordered quote comparison\\
 IL uses the correct hold benchmark & Zero-change and known V2 formula tests\\
 Experiments are reproducible & Exact row counts and deterministic frames\\
+Monte Carlo is reproducible & Fixed seed and zero-volatility path tests\\
 \bottomrule
 \end{tabular}
 \end{table}
@@ -476,6 +567,10 @@ achieves the lowest near-parity slippage in the study, but high amplification
 turns a small depeg into a meaningful LP loss. Weighted pools preserve
 asymmetric portfolio exposure and can reduce IL relative to that weighted
 benchmark, while producing direction-dependent execution.
+
+Monte Carlo results make the range trade-off distributional: narrow V3 loses
+fee availability and develops strongly negative downside as volatility rises,
+while full-range and wide-range positions retain more stable average outcomes.
 
 For general volatile markets without active LP management, V2-like full-range
 liquidity remains the simplest robust choice. For bounded or actively managed

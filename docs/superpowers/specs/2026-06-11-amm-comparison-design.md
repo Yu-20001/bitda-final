@@ -11,11 +11,11 @@ A:
 2. Simulate different liquidity and trade-volume scenarios.
 3. Visualize differences in slippage, LP return, and impermanent loss.
 4. Explain methods, assumptions, results, limitations, and parameter choices
-   clearly enough for an 8--10 page technical report.
+   clearly in a compact technical report.
 
-The project intentionally excludes the extra-content portion: no Monte Carlo
-simulation, LVR analysis, live on-chain data, active V3 rebalancing, or
-interactive dashboard.
+The base study intentionally excludes extra-content features. A separately
+specified Monte Carlo extension was later added; LVR analysis, live on-chain
+data, active V3 rebalancing, and an interactive dashboard remain excluded.
 
 ## Approach
 
@@ -34,8 +34,8 @@ It also avoids infrastructure work that does not directly support the rubric.
 
 - Two-token constant-product pool: `x * y = k`.
 - Default swap fee: 0.30%.
-- Slippage is measured against the pre-trade spot price and includes price
-  impact but reports fee separately.
+- Slippage uses gross input and therefore includes both price impact and the
+  trading fee; fee paid is also reported separately.
 - Impermanent loss is measured against holding the initial token quantities.
 
 ### Uniswap V3
@@ -46,6 +46,8 @@ It also avoids infrastructure work that does not directly support the rubric.
   `[0.95, 1.05]`, `[0.80, 1.20]`, and `[0.50, 2.00]`.
 - Initial token value is normalized to the same capital as other models.
 - No active rebalancing. A position outside its range earns no fees.
+- An exact-input quote that exceeds the single position's range capacity is
+  rejected rather than reported as a partial fill.
 - Default swap fee: 0.30%.
 
 The three fixed ranges isolate the capital-efficiency versus range-risk
@@ -110,8 +112,9 @@ Fee income is approximated as:
 `period_fee_income = daily_volume * fee_rate * 30`
 
 For V3, fee income is multiplied by an in-range availability factor derived
-from a linear path between initial and terminal price. LP net return equals fee
-return plus impermanent loss. This intentionally simple decomposition is
+from a linear path between initial and terminal price. The output reports
+absolute LP return relative to initial capital and excess return relative to
+holding the same initial assets. This intentionally simple decomposition is
 reported as a limitation: it does not model endogenous volume, arbitrage
 volume, fee compounding, or path-dependent inventory changes.
 
@@ -213,7 +216,8 @@ The work stops for user review when:
 - All four required AMM mechanisms are implemented and tested.
 - Required liquidity and volume scenarios execute deterministically.
 - Slippage, LP return, and impermanent-loss CSVs and figures exist.
-- The English two-column report compiles to an 8--10 page PDF.
+- The English two-column report compiles with readable figure labels and
+  natural page flow rather than forced page-count padding.
 - README reproduction commands succeed.
-- No explicitly excluded extra-content feature is included.
-
+- No explicitly excluded extra-content feature other than the separately
+  approved Monte Carlo extension is included.

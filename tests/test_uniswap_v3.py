@@ -31,6 +31,13 @@ def test_v3_swap_is_positive_and_cannot_cross_lower_bound():
     assert result.terminal_price >= 0.95
 
 
+def test_v3_rejects_exact_input_that_exceeds_range_capacity():
+    position = UniswapV3Position.from_capital(1_000_000, 1.0, 0.95, 1.05)
+
+    with pytest.raises(ValueError, match="exceeds fixed-range capacity"):
+        position.quote_x_for_y(600_000)
+
+
 def test_v3_path_availability_is_full_inside_and_partial_outside():
     position = UniswapV3Position.from_capital(1_000_000, 1.0, 0.8, 1.2)
 

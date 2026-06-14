@@ -79,11 +79,57 @@ def generate_figures(frames: dict, output_dir: Path) -> None:
     returns = returns[returns["daily_volume_fraction"] == 0.5].copy()
     returns["label"] = returns.apply(_label, axis=1)
     for label, group in returns.groupby("label", sort=False):
-        plt.plot(group["price_change"], group["net_return"], marker="o", label=label)
+        plt.plot(
+            group["price_change"],
+            group["excess_return_vs_hold"],
+            marker="o",
+            label=label,
+        )
     plt.axhline(0, color="black", linewidth=0.8)
     plt.xlabel("Terminal price change")
-    plt.ylabel("30-day LP net return")
+    plt.ylabel("30-day LP excess return vs HODL")
     plt.gca().xaxis.set_major_formatter(PercentFormatter(1))
     plt.gca().yaxis.set_major_formatter(PercentFormatter(1))
     plt.legend(ncol=2)
     _save(output_dir / "lp_return.pdf")
+
+    monte_carlo = frames["monte_carlo_summary"].copy()
+    monte_carlo["label"] = monte_carlo.apply(_label, axis=1)
+    for label, group in monte_carlo.groupby("label", sort=False):
+        group = group.sort_values("annual_volatility")
+        plt.plot(
+            group["annual_volatility"],
+            group["mean_excess_return_vs_hold"],
+            marker="o",
+            label=f"{label} mean",
+        )
+        plt.plot(
+            group["annual_volatility"],
+            group["p05_excess_return_vs_hold"],
+            linestyle="--",
+            alpha=0.65,
+            label=f"{label} 5th pct.",
+        )
+    plt.axhline(0, color="black", linewidth=0.8)
+    plt.xlabel("Annualized volatility")
+    plt.ylabel("30-day LP excess return vs HODL")
+    plt.gca().xaxis.set_major_formatter(PercentFormatter(1))
+    plt.gca().yaxis.set_major_formatter(PercentFormatter(1))
+    plt.legend(ncol=2)
+    _save(output_dir / "monte_carlo_returns.pdf")
+
+    v3 = monte_carlo[monte_carlo["model"] == "Uniswap V3"]
+    for label, group in v3.groupby("label", sort=False):
+        group = group.sort_values("annual_volatility")
+        plt.plot(
+            group["annual_volatility"],
+            group["ever_exit_probability"],
+            marker="o",
+            label=label,
+        )
+    plt.xlabel("Annualized volatility")
+    plt.ylabel("Probability of leaving range")
+    plt.gca().xaxis.set_major_formatter(PercentFormatter(1))
+    plt.gca().yaxis.set_major_formatter(PercentFormatter(1))
+    plt.legend()
+    _save(output_dir / "v3_range_risk.pdf")

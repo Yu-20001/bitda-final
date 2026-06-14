@@ -13,3 +13,8 @@ stableswap_amplifications: [10, 100, 1000]
 weighted_pool_weights:
   "50_50": [0.50, 0.50]
   "80_20": [0.80, 0.20]
+monte_carlo:
+  annual_volatilities: [0.20, 0.60, 1.00]
+  paths: 10000
+  seed: 20260611
+  daily_volume_fraction: 0.50
